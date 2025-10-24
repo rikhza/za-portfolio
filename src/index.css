@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@font-face {
+	font-family: "Geist Mono";
+	src: url("https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;700&display=swap");
+}
+
+@font-face {
+	font-family: "Instrument Serif";
+	src: url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital,wght@0,400;1,400&display=swap");
+}
+
+:root {
+	--background: #ffffff;
+	--foreground: #171717;
+	--font-mono: "Geist Mono", "Courier New", monospace;
+	--font-serif: "Instrument Serif", "Georgia", serif;
+}
+
+@theme inline {
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--font-mono: var(--font-mono);
+	--font-serif: var(--font-serif);
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--background: #0a0a0a;
+		--foreground: #ededed;
+	}
+}
+
+body {
+	background: var(--background);
+	color: var(--foreground);
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+.font-mono {
+	font-family: var(--font-mono);
+}
+
+.font-serif {
+	font-family: var(--font-serif);
+}
