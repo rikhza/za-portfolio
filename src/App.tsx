@@ -13,13 +13,13 @@ export default function App() {
 
 	const sampleImages = [
 		{ src: "/image1.webp", alt: "Tangkapp.id" },
-		{ src: "/2.webp", alt: "Image 2" },
 		{ src: "/image2.webp", alt: "lokakota jurnal" },
 		{ src: "/image3.webp", alt: "github" },
-		{ src: "/4.webp", alt: "Image 4" },
 		{ src: "/image4.webp", alt: "cigi digital" },
-		{ src: "/5.webp", alt: "Image 5" },
 		{ src: "/image5.webp", alt: "lokakota.id" },
+		{ src: "/image6.webp", alt: "aws" },
+		{ src: "/image7.webp", alt: "react" },
+		{ src: "/image8.webp", alt: "cobol" },
 	];
 
 	return (
