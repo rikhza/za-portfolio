@@ -42,7 +42,7 @@ export default function App() {
 			alt: "tangkapp project",
 			title: "Tangkapp.id",
 			description: "A sophisticated document flow and bureaucracy web application designed to streamline institutional processes.",
-			stack: ["MongoDB", "Express.js", "React", "Node.js", "MERN Stack"],
+			stack: ["MongoDB", "Express.js", "React", "Node.js"],
 			url: "https://tangkapp.id"
 		},
 		{

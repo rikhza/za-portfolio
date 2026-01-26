@@ -86,112 +86,112 @@ const createClothMaterial = () => {
 			spotlightIntensity: { value: 0.0 },
 		},
 		vertexShader: `
-      uniform float scrollForce;
-      uniform float time;
-      uniform float isHovered;
-      uniform float mouseX;
-      uniform float mouseY;
-      varying vec2 vUv;
-      varying vec3 vNormal;
-      varying vec3 vWorldPos;
-      
-      void main() {
-        vUv = uv;
-        vNormal = normal;
-        
-        vec3 pos = position;
-        
-        // Parallax effect based on mouse position
-        float parallaxX = mouseX * 0.15;
-        float parallaxY = mouseY * 0.1;
-        
-        // Create smooth curving based on scroll force
-        float curveIntensity = scrollForce * 0.3;
-        
-        // Base curve across the plane based on distance from center
-        float distanceFromCenter = length(pos.xy);
-        float curve = distanceFromCenter * distanceFromCenter * curveIntensity;
-        
-        // Add gentle cloth-like ripples
-        float ripple1 = sin(pos.x * 2.0 + scrollForce * 3.0) * 0.02;
-        float ripple2 = sin(pos.y * 2.5 + scrollForce * 2.0) * 0.015;
-        float clothEffect = (ripple1 + ripple2) * abs(curveIntensity) * 2.0;
-        
-        // Flag waving effect when hovered
-        float flagWave = 0.0;
-        if (isHovered > 0.5) {
-          // Create flag-like wave from left to right
-          float wavePhase = pos.x * 3.0 + time * 8.0;
-          float waveAmplitude = sin(wavePhase) * 0.08;
-          // Damping effect - stronger wave on the right side (free edge)
-          float dampening = smoothstep(-0.5, 0.5, pos.x);
-          flagWave = waveAmplitude * dampening;
-          
-          // Add secondary smaller waves for more realistic flag motion
-          float secondaryWave = sin(pos.x * 5.0 + time * 12.0) * 0.025 * dampening;
-          flagWave += secondaryWave;
-        }
-        
-        // Apply parallax offset to position
-        pos.x += parallaxX * (1.0 - abs(pos.x) * 0.5);
-        pos.y += parallaxY * (1.0 - abs(pos.y) * 0.5);
-        
-        // Apply Z displacement for curving effect (inverted) with cloth ripples and flag wave
-        pos.z -= (curve + clothEffect + flagWave);
-        
-        vWorldPos = (modelMatrix * vec4(pos, 1.0)).xyz;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-      }
-    `,
+		uniform float scrollForce;
+		uniform float time;
+		uniform float isHovered;
+		uniform float mouseX;
+		uniform float mouseY;
+		varying vec2 vUv;
+		varying vec3 vNormal;
+		varying vec3 vWorldPos;
+		
+		void main() {
+			vUv = uv;
+			vNormal = normal;
+			
+			vec3 pos = position;
+			
+			// Parallax effect based on mouse position
+			float parallaxX = mouseX * 0.15;
+			float parallaxY = mouseY * 0.1;
+			
+			// Create smooth curving based on scroll force
+			float curveIntensity = scrollForce * 0.3;
+			
+			// Base curve across the plane based on distance from center
+			float distanceFromCenter = length(pos.xy);
+			float curve = distanceFromCenter * distanceFromCenter * curveIntensity;
+			
+			// Add gentle cloth-like ripples
+			float ripple1 = sin(pos.x * 2.0 + scrollForce * 3.0) * 0.02;
+			float ripple2 = sin(pos.y * 2.5 + scrollForce * 2.0) * 0.015;
+			float clothEffect = (ripple1 + ripple2) * abs(curveIntensity) * 2.0;
+			
+			// Flag waving effect when hovered
+			float flagWave = 0.0;
+			if (isHovered > 0.5) {
+			// Create flag-like wave from left to right
+			float wavePhase = pos.x * 3.0 + time * 8.0;
+			float waveAmplitude = sin(wavePhase) * 0.08;
+			// Damping effect - stronger wave on the right side (free edge)
+			float dampening = smoothstep(-0.5, 0.5, pos.x);
+			flagWave = waveAmplitude * dampening;
+			
+			// Add secondary smaller waves for more realistic flag motion
+			float secondaryWave = sin(pos.x * 5.0 + time * 12.0) * 0.025 * dampening;
+			flagWave += secondaryWave;
+			}
+			
+			// Apply parallax offset to position
+			pos.x += parallaxX * (1.0 - abs(pos.x) * 0.5);
+			pos.y += parallaxY * (1.0 - abs(pos.y) * 0.5);
+			
+			// Apply Z displacement for curving effect (inverted) with cloth ripples and flag wave
+			pos.z -= (curve + clothEffect + flagWave);
+			
+			vWorldPos = (modelMatrix * vec4(pos, 1.0)).xyz;
+			gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+		}
+		`,
 		fragmentShader: `
-      uniform sampler2D map;
-      uniform float opacity;
-      uniform float blurAmount;
-      uniform float scrollForce;
-      uniform float isHovered;
-      uniform float spotlightIntensity;
-      varying vec2 vUv;
-      varying vec3 vNormal;
-      varying vec3 vWorldPos;
-      
-      void main() {
-        vec4 color = texture2D(map, vUv);
-        
-        // Simple blur approximation
-        if (blurAmount > 0.0) {
-          vec2 texelSize = 1.0 / vec2(textureSize(map, 0));
-          vec4 blurred = vec4(0.0);
-          float total = 0.0;
-          
-          for (float x = -2.0; x <= 2.0; x += 1.0) {
-            for (float y = -2.0; y <= 2.0; y += 1.0) {
-              vec2 offset = vec2(x, y) * texelSize * blurAmount;
-              float weight = 1.0 / (1.0 + length(vec2(x, y)));
-              blurred += texture2D(map, vUv + offset) * weight;
-              total += weight;
-            }
-          }
-          color = blurred / total;
-        }
-        
-        // Add subtle lighting effect based on curving
-        float curveHighlight = abs(scrollForce) * 0.05;
-        color.rgb += vec3(curveHighlight * 0.1);
-        
-        // Spotlight effect when hovered - warm glow
-        if (isHovered > 0.5) {
-          float spotDistance = length(vUv - vec2(0.5));
-          float spotlight = 1.0 - smoothstep(0.0, 0.7, spotDistance);
-          vec3 warmLight = vec3(1.0, 0.95, 0.85) * spotlight * spotlightIntensity * 0.25;
-          color.rgb += warmLight;
-          
-          // Slight contrast boost
-          color.rgb = mix(color.rgb, pow(color.rgb, vec3(0.95)), 0.3);
-        }
-        
-        gl_FragColor = vec4(color.rgb, color.a * opacity);
-      }
-    `,
+		uniform sampler2D map;
+		uniform float opacity;
+		uniform float blurAmount;
+		uniform float scrollForce;
+		uniform float isHovered;
+		uniform float spotlightIntensity;
+		varying vec2 vUv;
+		varying vec3 vNormal;
+		varying vec3 vWorldPos;
+		
+		void main() {
+			vec4 color = texture2D(map, vUv);
+			
+			// Simple blur approximation
+			if (blurAmount > 0.0) {
+			vec2 texelSize = 1.0 / vec2(textureSize(map, 0));
+			vec4 blurred = vec4(0.0);
+			float total = 0.0;
+			
+			for (float x = -2.0; x <= 2.0; x += 1.0) {
+				for (float y = -2.0; y <= 2.0; y += 1.0) {
+				vec2 offset = vec2(x, y) * texelSize * blurAmount;
+				float weight = 1.0 / (1.0 + length(vec2(x, y)));
+				blurred += texture2D(map, vUv + offset) * weight;
+				total += weight;
+				}
+			}
+			color = blurred / total;
+			}
+			
+			// Add subtle lighting effect based on curving
+			float curveHighlight = abs(scrollForce) * 0.05;
+			color.rgb += vec3(curveHighlight * 0.1);
+			
+			// Spotlight effect when hovered - warm glow
+			if (isHovered > 0.5) {
+			float spotDistance = length(vUv - vec2(0.5));
+			float spotlight = 1.0 - smoothstep(0.0, 0.7, spotDistance);
+			vec3 warmLight = vec3(1.0, 0.95, 0.85) * spotlight * spotlightIntensity * 0.25;
+			color.rgb += warmLight;
+			
+			// Slight contrast boost
+			color.rgb = mix(color.rgb, pow(color.rgb, vec3(0.95)), 0.3);
+			}
+			
+			gl_FragColor = vec4(color.rgb, color.a * opacity);
+		}
+		`,
 	});
 };
 
@@ -326,15 +326,12 @@ function GalleryScene({
 		const maxVerticalOffset = MAX_VERTICAL_OFFSET * responsiveScale;
 
 		for (let i = 0; i < visibleCount; i++) {
-			// Create varied distribution patterns for both axes
-			const horizontalAngle = (i * 2.618) % (Math.PI * 2);
-			const verticalAngle = (i * 1.618 + Math.PI / 3) % (Math.PI * 2);
+			// A tighter spiral that keeps images more centered and legible
+			const angle = (i / visibleCount) * Math.PI * 2;
+			const radius = 0.8 + (i % 2) * 0.4; // Tightened radius
 
-			const horizontalRadius = (i % 3) * 1.2;
-			const verticalRadius = ((i + 1) % 4) * 0.8;
-
-			const x = (Math.sin(horizontalAngle) * horizontalRadius * maxHorizontalOffset) / 3;
-			const y = (Math.cos(verticalAngle) * verticalRadius * maxVerticalOffset) / 4;
+			const x = Math.cos(angle) * radius * maxHorizontalOffset * 0.25;
+			const y = Math.sin(angle) * radius * maxVerticalOffset * 0.25;
 
 			positions.push({ x, y });
 		}
@@ -345,11 +342,13 @@ function GalleryScene({
 	const totalImages = normalizedImages.length;
 	const depthRange = DEFAULT_DEPTH_RANGE;
 
-	// Initialize plane data
+	// Initialize plane data - mapped so higher indices are further away (sequential forward scroll)
 	const planesData = useRef<PlaneData[]>(
 		Array.from({ length: visibleCount }, (_, i) => ({
 			index: i,
-			z: visibleCount > 0 ? ((depthRange / visibleCount) * i + depthRange * 0.3) % depthRange : 0,
+			// Initial Z: spread across depthRange. i=0 is furthest back (-25 world), i=11 is closest to camera.
+			// Reverse: i=0 is closest to camera, i increases as it goes back.
+			z: visibleCount > 0 ? (depthRange - ((depthRange / visibleCount) * i)) % depthRange : 0,
 			imageIndex: totalImages > 0 ? i % totalImages : 0,
 			x: spatialPositions[i]?.x ?? 0,
 			y: spatialPositions[i]?.y ?? 0,
@@ -359,7 +358,7 @@ function GalleryScene({
 	useEffect(() => {
 		planesData.current = Array.from({ length: visibleCount }, (_, i) => ({
 			index: i,
-			z: visibleCount > 0 ? ((depthRange / Math.max(visibleCount, 1)) * i + depthRange * 0.3) % depthRange : 0,
+			z: visibleCount > 0 ? (depthRange - ((depthRange / Math.max(visibleCount, 1)) * i)) % depthRange : 0,
 			imageIndex: totalImages > 0 ? i % totalImages : 0,
 			x: spatialPositions[i]?.x ?? 0,
 			y: spatialPositions[i]?.y ?? 0,
@@ -370,7 +369,8 @@ function GalleryScene({
 	const handleWheel = useCallback(
 		(event: WheelEvent) => {
 			event.preventDefault();
-			setScrollVelocity((prev) => prev + event.deltaY * 0.01 * speed);
+			// Reverse deltaY for more natural "zooming into" the sequence
+			setScrollVelocity((prev) => prev - event.deltaY * 0.01 * speed);
 			setAutoPlay(false);
 			lastInteraction.current = Date.now();
 		},
@@ -397,7 +397,7 @@ function GalleryScene({
 
 				// Use the larger delta for scrolling
 				const delta = Math.abs(deltaY) > Math.abs(deltaX) ? deltaY : deltaX;
-				setScrollVelocity((prev) => prev + delta * 0.03 * speed);
+				setScrollVelocity((prev) => prev - delta * 0.03 * speed);
 
 				touchStartY.current = event.touches[0].clientY;
 				touchStartX.current = event.touches[0].clientX;
@@ -424,11 +424,11 @@ function GalleryScene({
 	const handleKeyDown = useCallback(
 		(event: KeyboardEvent) => {
 			if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
-				setScrollVelocity((prev) => prev - 2 * speed);
+				setScrollVelocity((prev) => prev + 2 * speed);
 				setAutoPlay(false);
 				lastInteraction.current = Date.now();
 			} else if (event.key === "ArrowDown" || event.key === "ArrowRight") {
-				setScrollVelocity((prev) => prev + 2 * speed);
+				setScrollVelocity((prev) => prev - 2 * speed);
 				setAutoPlay(false);
 				lastInteraction.current = Date.now();
 			}
@@ -481,9 +481,9 @@ function GalleryScene({
 	);
 
 	useFrame((state, delta) => {
-		// Apply auto-play
+		// Apply auto-play - forward towards the next image
 		if (autoPlay) {
-			setScrollVelocity((prev) => prev + 0.3 * delta);
+			setScrollVelocity((prev) => prev - 0.2 * delta); // Slower, more stable auto-play
 		}
 
 		// Smooth damping with easing
@@ -501,11 +501,10 @@ function GalleryScene({
 		});
 
 		// Update plane positions
-		const imageAdvance = totalImages > 0 ? visibleCount % totalImages || totalImages : 0;
 		const totalRange = depthRange;
 
 		planesData.current.forEach((plane, i) => {
-			let newZ = plane.z + scrollVelocity * delta * 10;
+			let newZ = plane.z + scrollVelocity * delta * 15;
 			let wrapsForward = 0;
 			let wrapsBackward = 0;
 
@@ -517,13 +516,17 @@ function GalleryScene({
 				newZ += totalRange * wrapsBackward;
 			}
 
-			if (wrapsForward > 0 && imageAdvance > 0 && totalImages > 0) {
-				plane.imageIndex = (plane.imageIndex + wrapsForward * imageAdvance) % totalImages;
+			// Sequential wrap logic: When a plane wraps back to the far end, it gets the next set of images
+			// Since we have visibleCount (12) planes and totalImages (6), each image appears twice.
+			// When moving backward (z increases, newZ wraps forward), index should advance.
+			// When moving forward into camera (z decreases, newZ wraps backward), index should reverse.
+
+			if (wrapsForward > 0 && totalImages > 0) {
+				plane.imageIndex = (plane.imageIndex + totalImages - (wrapsForward * (visibleCount % totalImages || totalImages)) % totalImages) % totalImages;
 			}
 
-			if (wrapsBackward > 0 && imageAdvance > 0 && totalImages > 0) {
-				const step = plane.imageIndex - wrapsBackward * imageAdvance;
-				plane.imageIndex = ((step % totalImages) + totalImages) % totalImages;
+			if (wrapsBackward > 0 && totalImages > 0) {
+				plane.imageIndex = (plane.imageIndex + (wrapsBackward * (visibleCount % totalImages || totalImages))) % totalImages;
 			}
 
 			plane.z = ((newZ % totalRange) + totalRange) % totalRange;
@@ -596,7 +599,7 @@ function GalleryScene({
 
 				// Calculate scale to maintain aspect ratio with responsive sizing
 				const aspect = texture.image ? texture.image.width / texture.image.height : 1;
-				const baseSize = 2 * responsiveScale;
+				const baseSize = 2.4 * responsiveScale; // Larger base size for clarity
 				const scale: [number, number, number] =
 					aspect > 1 ? [baseSize * aspect, baseSize, 1] : [baseSize, baseSize / aspect, 1];
 
@@ -665,13 +668,13 @@ export default function InfiniteGallery({
 	className = "h-96 w-full",
 	style,
 	fadeSettings = {
-		fadeIn: { start: 0.05, end: 0.25 },
-		fadeOut: { start: 0.4, end: 0.43 },
+		fadeIn: { start: 0.02, end: 0.15 },
+		fadeOut: { start: 0.75, end: 0.95 }, // Stay clear much longer
 	},
 	blurSettings = {
-		blurIn: { start: 0.0, end: 0.1 },
-		blurOut: { start: 0.4, end: 0.43 },
-		maxBlur: 8.0,
+		blurIn: { start: 0.0, end: 0.05 },
+		blurOut: { start: 0.8, end: 1.0 },
+		maxBlur: 3.5, // Reduced blur for better visual clarity
 	},
 	onImageHover,
 	onImageClick,
