@@ -4,7 +4,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
 
-type ImageItem = string | { src: string; alt?: string };
+type ImageItem = string | { src: string; alt?: string; title?: string };
 
 interface FadeSettings {
 	/** Fade in range as percentage of depth range (0-1) */
@@ -52,6 +52,10 @@ interface InfiniteGalleryProps {
 	className?: string;
 	/** Optional style for outer container */
 	style?: React.CSSProperties;
+	/** Callback when image is hovered */
+	onImageHover?: (index: number | null, title?: string) => void;
+	/** Callback when image is clicked */
+	onImageClick?: (index: number) => void;
 }
 
 interface PlaneData {
@@ -59,14 +63,14 @@ interface PlaneData {
 	z: number;
 	imageIndex: number;
 	x: number;
-	y: number; // Added y property for vertical positioning
+	y: number;
 }
 
 const DEFAULT_DEPTH_RANGE = 50;
 const MAX_HORIZONTAL_OFFSET = 8;
 const MAX_VERTICAL_OFFSET = 8;
 
-// Custom shader material for blur, opacity, and cloth folding effects
+// Custom shader material for blur, opacity, cloth folding, and spotlight effects
 const createClothMaterial = () => {
 	return new THREE.ShaderMaterial({
 		transparent: true,
@@ -77,19 +81,29 @@ const createClothMaterial = () => {
 			scrollForce: { value: 0.0 },
 			time: { value: 0.0 },
 			isHovered: { value: 0.0 },
+			mouseX: { value: 0.0 },
+			mouseY: { value: 0.0 },
+			spotlightIntensity: { value: 0.0 },
 		},
 		vertexShader: `
       uniform float scrollForce;
       uniform float time;
       uniform float isHovered;
+      uniform float mouseX;
+      uniform float mouseY;
       varying vec2 vUv;
       varying vec3 vNormal;
+      varying vec3 vWorldPos;
       
       void main() {
         vUv = uv;
         vNormal = normal;
         
         vec3 pos = position;
+        
+        // Parallax effect based on mouse position
+        float parallaxX = mouseX * 0.15;
+        float parallaxY = mouseY * 0.1;
         
         // Create smooth curving based on scroll force
         float curveIntensity = scrollForce * 0.3;
@@ -108,19 +122,24 @@ const createClothMaterial = () => {
         if (isHovered > 0.5) {
           // Create flag-like wave from left to right
           float wavePhase = pos.x * 3.0 + time * 8.0;
-          float waveAmplitude = sin(wavePhase) * 0.1;
+          float waveAmplitude = sin(wavePhase) * 0.08;
           // Damping effect - stronger wave on the right side (free edge)
           float dampening = smoothstep(-0.5, 0.5, pos.x);
           flagWave = waveAmplitude * dampening;
           
           // Add secondary smaller waves for more realistic flag motion
-          float secondaryWave = sin(pos.x * 5.0 + time * 12.0) * 0.03 * dampening;
+          float secondaryWave = sin(pos.x * 5.0 + time * 12.0) * 0.025 * dampening;
           flagWave += secondaryWave;
         }
+        
+        // Apply parallax offset to position
+        pos.x += parallaxX * (1.0 - abs(pos.x) * 0.5);
+        pos.y += parallaxY * (1.0 - abs(pos.y) * 0.5);
         
         // Apply Z displacement for curving effect (inverted) with cloth ripples and flag wave
         pos.z -= (curve + clothEffect + flagWave);
         
+        vWorldPos = (modelMatrix * vec4(pos, 1.0)).xyz;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
       }
     `,
@@ -129,8 +148,11 @@ const createClothMaterial = () => {
       uniform float opacity;
       uniform float blurAmount;
       uniform float scrollForce;
+      uniform float isHovered;
+      uniform float spotlightIntensity;
       varying vec2 vUv;
       varying vec3 vNormal;
+      varying vec3 vWorldPos;
       
       void main() {
         vec4 color = texture2D(map, vUv);
@@ -156,6 +178,17 @@ const createClothMaterial = () => {
         float curveHighlight = abs(scrollForce) * 0.05;
         color.rgb += vec3(curveHighlight * 0.1);
         
+        // Spotlight effect when hovered - warm glow
+        if (isHovered > 0.5) {
+          float spotDistance = length(vUv - vec2(0.5));
+          float spotlight = 1.0 - smoothstep(0.0, 0.7, spotDistance);
+          vec3 warmLight = vec3(1.0, 0.95, 0.85) * spotlight * spotlightIntensity * 0.25;
+          color.rgb += warmLight;
+          
+          // Slight contrast boost
+          color.rgb = mix(color.rgb, pow(color.rgb, vec3(0.95)), 0.3);
+        }
+        
         gl_FragColor = vec4(color.rgb, color.a * opacity);
       }
     `,
@@ -167,14 +200,21 @@ function ImagePlane({
 	position,
 	scale,
 	material,
+	imageIndex,
+	onHover,
+	onClick,
 }: {
 	texture: THREE.Texture;
 	position: [number, number, number];
 	scale: [number, number, number];
 	material: THREE.ShaderMaterial;
+	imageIndex: number;
+	onHover?: (index: number | null) => void;
+	onClick?: (index: number) => void;
 }) {
 	const meshRef = useRef<THREE.Mesh>(null);
 	const [isHovered, setIsHovered] = useState(false);
+	const hoverProgress = useRef(0);
 
 	useEffect(() => {
 		if (material && texture) {
@@ -182,11 +222,29 @@ function ImagePlane({
 		}
 	}, [material, texture]);
 
-	useEffect(() => {
+	useFrame((_, delta) => {
+		// Smooth hover transition
+		const targetHover = isHovered ? 1.0 : 0.0;
+		hoverProgress.current += (targetHover - hoverProgress.current) * delta * 8;
+
 		if (material && material.uniforms) {
-			material.uniforms.isHovered.value = isHovered ? 1.0 : 0.0;
+			material.uniforms.isHovered.value = hoverProgress.current;
+			material.uniforms.spotlightIntensity.value = hoverProgress.current;
 		}
-	}, [material, isHovered]);
+
+		// Smooth scale animation on hover
+		if (meshRef.current) {
+			const targetScale = isHovered ? 1.08 : 1.0;
+			meshRef.current.scale.lerp(
+				new THREE.Vector3(
+					scale[0] * targetScale,
+					scale[1] * targetScale,
+					scale[2]
+				),
+				delta * 6
+			);
+		}
+	});
 
 	return (
 		<mesh
@@ -194,13 +252,25 @@ function ImagePlane({
 			position={position}
 			scale={scale}
 			material={material}
-			onPointerEnter={() => setIsHovered(true)}
-			onPointerLeave={() => setIsHovered(false)}
+			onPointerEnter={() => {
+				setIsHovered(true);
+				onHover?.(imageIndex);
+			}}
+			onPointerLeave={() => {
+				setIsHovered(false);
+				onHover?.(null);
+			}}
+			onClick={(e) => {
+				e.stopPropagation();
+				onClick?.(imageIndex);
+			}}
 		>
 			<planeGeometry args={[1, 1, 32, 32]} />
 		</mesh>
 	);
 }
+
+interface GallerySceneProps extends Omit<InfiniteGalleryProps, "className" | "style"> { }
 
 function GalleryScene({
 	images,
@@ -215,16 +285,28 @@ function GalleryScene({
 		blurOut: { start: 0.9, end: 1.0 },
 		maxBlur: 3.0,
 	},
-}: Omit<InfiniteGalleryProps, "className" | "style">) {
+	onImageHover,
+	onImageClick,
+}: GallerySceneProps) {
 	const [scrollVelocity, setScrollVelocity] = useState(0);
 	const [autoPlay, setAutoPlay] = useState(true);
+	const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 	const lastInteraction = useRef(Date.now());
+	const touchStartY = useRef<number | null>(null);
+	const touchStartX = useRef<number | null>(null);
+	const { size } = useThree();
+
+	// Calculate responsive scale based on viewport
+	const responsiveScale = useMemo(() => {
+		const baseScale = Math.min(size.width / 1200, 1.2);
+		return Math.max(0.6, baseScale);
+	}, [size.width]);
 
 	// Normalize images to objects
 	const normalizedImages = useMemo(
 		() =>
 			images.map((img) =>
-				typeof img === "string" ? { src: img, alt: "" } : img
+				typeof img === "string" ? { src: img, alt: "", title: "" } : img
 			),
 		[images]
 	);
@@ -240,31 +322,25 @@ function GalleryScene({
 
 	const spatialPositions = useMemo(() => {
 		const positions: { x: number; y: number }[] = [];
-		const maxHorizontalOffset = MAX_HORIZONTAL_OFFSET;
-		const maxVerticalOffset = MAX_VERTICAL_OFFSET;
+		const maxHorizontalOffset = MAX_HORIZONTAL_OFFSET * responsiveScale;
+		const maxVerticalOffset = MAX_VERTICAL_OFFSET * responsiveScale;
 
 		for (let i = 0; i < visibleCount; i++) {
 			// Create varied distribution patterns for both axes
-			const horizontalAngle = (i * 2.618) % (Math.PI * 2); // Golden angle for natural distribution
-			const verticalAngle = (i * 1.618 + Math.PI / 3) % (Math.PI * 2); // Offset angle for vertical
+			const horizontalAngle = (i * 2.618) % (Math.PI * 2);
+			const verticalAngle = (i * 1.618 + Math.PI / 3) % (Math.PI * 2);
 
-			const horizontalRadius = (i % 3) * 1.2; // Vary the distance from center
-			const verticalRadius = ((i + 1) % 4) * 0.8; // Different pattern for vertical
+			const horizontalRadius = (i % 3) * 1.2;
+			const verticalRadius = ((i + 1) % 4) * 0.8;
 
-			const x =
-				(Math.sin(horizontalAngle) *
-					horizontalRadius *
-					maxHorizontalOffset) /
-				3;
-			const y =
-				(Math.cos(verticalAngle) * verticalRadius * maxVerticalOffset) /
-				4;
+			const x = (Math.sin(horizontalAngle) * horizontalRadius * maxHorizontalOffset) / 3;
+			const y = (Math.cos(verticalAngle) * verticalRadius * maxVerticalOffset) / 4;
 
 			positions.push({ x, y });
 		}
 
 		return positions;
-	}, [visibleCount]);
+	}, [visibleCount, responsiveScale]);
 
 	const totalImages = normalizedImages.length;
 	const depthRange = DEFAULT_DEPTH_RANGE;
@@ -273,24 +349,17 @@ function GalleryScene({
 	const planesData = useRef<PlaneData[]>(
 		Array.from({ length: visibleCount }, (_, i) => ({
 			index: i,
-			z:
-				visibleCount > 0
-					? ((depthRange / visibleCount) * i) % depthRange
-					: 0,
+			z: visibleCount > 0 ? ((depthRange / visibleCount) * i + depthRange * 0.3) % depthRange : 0,
 			imageIndex: totalImages > 0 ? i % totalImages : 0,
-			x: spatialPositions[i]?.x ?? 0, // Use spatial positions for x
-			y: spatialPositions[i]?.y ?? 0, // Use spatial positions for y
+			x: spatialPositions[i]?.x ?? 0,
+			y: spatialPositions[i]?.y ?? 0,
 		}))
 	);
 
 	useEffect(() => {
 		planesData.current = Array.from({ length: visibleCount }, (_, i) => ({
 			index: i,
-			z:
-				visibleCount > 0
-					? ((depthRange / Math.max(visibleCount, 1)) * i) %
-					  depthRange
-					: 0,
+			z: visibleCount > 0 ? ((depthRange / Math.max(visibleCount, 1)) * i + depthRange * 0.3) % depthRange : 0,
 			imageIndex: totalImages > 0 ? i % totalImages : 0,
 			x: spatialPositions[i]?.x ?? 0,
 			y: spatialPositions[i]?.y ?? 0,
@@ -308,6 +377,49 @@ function GalleryScene({
 		[speed]
 	);
 
+	// Handle touch start
+	const handleTouchStart = useCallback((event: TouchEvent) => {
+		if (event.touches.length === 1) {
+			touchStartY.current = event.touches[0].clientY;
+			touchStartX.current = event.touches[0].clientX;
+			setAutoPlay(false);
+			lastInteraction.current = Date.now();
+		}
+	}, []);
+
+	// Handle touch move
+	const handleTouchMove = useCallback(
+		(event: TouchEvent) => {
+			if (touchStartY.current !== null && event.touches.length === 1) {
+				event.preventDefault();
+				const deltaY = touchStartY.current - event.touches[0].clientY;
+				const deltaX = touchStartX.current! - event.touches[0].clientX;
+
+				// Use the larger delta for scrolling
+				const delta = Math.abs(deltaY) > Math.abs(deltaX) ? deltaY : deltaX;
+				setScrollVelocity((prev) => prev + delta * 0.03 * speed);
+
+				touchStartY.current = event.touches[0].clientY;
+				touchStartX.current = event.touches[0].clientX;
+				lastInteraction.current = Date.now();
+			}
+		},
+		[speed]
+	);
+
+	// Handle touch end
+	const handleTouchEnd = useCallback(() => {
+		touchStartY.current = null;
+		touchStartX.current = null;
+	}, []);
+
+	// Handle mouse move for parallax
+	const handleMouseMove = useCallback((event: MouseEvent) => {
+		const x = (event.clientX / window.innerWidth) * 2 - 1;
+		const y = -(event.clientY / window.innerHeight) * 2 + 1;
+		setMousePos({ x, y });
+	}, []);
+
 	// Handle keyboard input
 	const handleKeyDown = useCallback(
 		(event: KeyboardEvent) => {
@@ -315,10 +427,7 @@ function GalleryScene({
 				setScrollVelocity((prev) => prev - 2 * speed);
 				setAutoPlay(false);
 				lastInteraction.current = Date.now();
-			} else if (
-				event.key === "ArrowDown" ||
-				event.key === "ArrowRight"
-			) {
+			} else if (event.key === "ArrowDown" || event.key === "ArrowRight") {
 				setScrollVelocity((prev) => prev + 2 * speed);
 				setAutoPlay(false);
 				lastInteraction.current = Date.now();
@@ -331,14 +440,24 @@ function GalleryScene({
 		const canvas = document.querySelector("canvas");
 		if (canvas) {
 			canvas.addEventListener("wheel", handleWheel, { passive: false });
+			canvas.addEventListener("touchstart", handleTouchStart, { passive: true });
+			canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+			canvas.addEventListener("touchend", handleTouchEnd);
 			document.addEventListener("keydown", handleKeyDown);
+			document.addEventListener("mousemove", handleMouseMove);
 
 			return () => {
-				canvas.removeEventListener("wheel", handleWheel);
+				if (canvas) {
+					canvas.removeEventListener("wheel", handleWheel);
+					canvas.removeEventListener("touchstart", handleTouchStart);
+					canvas.removeEventListener("touchmove", handleTouchMove);
+					canvas.removeEventListener("touchend", handleTouchEnd);
+				}
 				document.removeEventListener("keydown", handleKeyDown);
+				document.removeEventListener("mousemove", handleMouseMove);
 			};
 		}
-	}, [handleWheel, handleKeyDown]);
+	}, [handleWheel, handleKeyDown, handleTouchStart, handleTouchMove, handleTouchEnd, handleMouseMove]);
 
 	// Auto-play logic
 	useEffect(() => {
@@ -350,27 +469,39 @@ function GalleryScene({
 		return () => clearInterval(interval);
 	}, []);
 
+	// Handle image hover callback
+	const handleImageHover = useCallback(
+		(index: number | null) => {
+			if (onImageHover) {
+				const title = index !== null ? normalizedImages[index]?.title : undefined;
+				onImageHover(index, title);
+			}
+		},
+		[onImageHover, normalizedImages]
+	);
+
 	useFrame((state, delta) => {
 		// Apply auto-play
 		if (autoPlay) {
 			setScrollVelocity((prev) => prev + 0.3 * delta);
 		}
 
-		// Damping
-		setScrollVelocity((prev) => prev * 0.95);
+		// Smooth damping with easing
+		setScrollVelocity((prev) => prev * 0.93);
 
-		// Update time uniform for all materials
+		// Update time and mouse uniforms for all materials
 		const time = state.clock.getElapsedTime();
 		materials.forEach((material) => {
 			if (material && material.uniforms) {
 				material.uniforms.time.value = time;
 				material.uniforms.scrollForce.value = scrollVelocity;
+				material.uniforms.mouseX.value = mousePos.x;
+				material.uniforms.mouseY.value = mousePos.y;
 			}
 		});
 
 		// Update plane positions
-		const imageAdvance =
-			totalImages > 0 ? visibleCount % totalImages || totalImages : 0;
+		const imageAdvance = totalImages > 0 ? visibleCount % totalImages || totalImages : 0;
 		const totalRange = depthRange;
 
 		planesData.current.forEach((plane, i) => {
@@ -387,15 +518,12 @@ function GalleryScene({
 			}
 
 			if (wrapsForward > 0 && imageAdvance > 0 && totalImages > 0) {
-				plane.imageIndex =
-					(plane.imageIndex + wrapsForward * imageAdvance) %
-					totalImages;
+				plane.imageIndex = (plane.imageIndex + wrapsForward * imageAdvance) % totalImages;
 			}
 
 			if (wrapsBackward > 0 && imageAdvance > 0 && totalImages > 0) {
 				const step = plane.imageIndex - wrapsBackward * imageAdvance;
-				plane.imageIndex =
-					((step % totalImages) + totalImages) % totalImages;
+				plane.imageIndex = ((step % totalImages) + totalImages) % totalImages;
 			}
 
 			plane.z = ((newZ % totalRange) + totalRange) % totalRange;
@@ -403,68 +531,46 @@ function GalleryScene({
 			plane.y = spatialPositions[i]?.y ?? 0;
 
 			// Calculate opacity based on fade settings
-			const normalizedPosition = plane.z / totalRange; // 0 to 1
+			const normalizedPosition = plane.z / totalRange;
 			let opacity = 1;
 
-			if (
-				normalizedPosition >= fadeSettings.fadeIn.start &&
-				normalizedPosition <= fadeSettings.fadeIn.end
-			) {
-				// Fade in: opacity goes from 0 to 1 within the fade in range
+			if (normalizedPosition >= fadeSettings.fadeIn.start && normalizedPosition <= fadeSettings.fadeIn.end) {
 				const fadeInProgress =
 					(normalizedPosition - fadeSettings.fadeIn.start) /
 					(fadeSettings.fadeIn.end - fadeSettings.fadeIn.start);
 				opacity = fadeInProgress;
 			} else if (normalizedPosition < fadeSettings.fadeIn.start) {
-				// Before fade in starts: fully transparent
 				opacity = 0;
-			} else if (
-				normalizedPosition >= fadeSettings.fadeOut.start &&
-				normalizedPosition <= fadeSettings.fadeOut.end
-			) {
-				// Fade out: opacity goes from 1 to 0 within the fade out range
+			} else if (normalizedPosition >= fadeSettings.fadeOut.start && normalizedPosition <= fadeSettings.fadeOut.end) {
 				const fadeOutProgress =
 					(normalizedPosition - fadeSettings.fadeOut.start) /
 					(fadeSettings.fadeOut.end - fadeSettings.fadeOut.start);
 				opacity = 1 - fadeOutProgress;
 			} else if (normalizedPosition > fadeSettings.fadeOut.end) {
-				// After fade out ends: fully transparent
 				opacity = 0;
 			}
 
-			// Clamp opacity between 0 and 1
 			opacity = Math.max(0, Math.min(1, opacity));
 
 			// Calculate blur based on blur settings
 			let blur = 0;
 
-			if (
-				normalizedPosition >= blurSettings.blurIn.start &&
-				normalizedPosition <= blurSettings.blurIn.end
-			) {
-				// Blur in: blur goes from maxBlur to 0 within the blur in range
+			if (normalizedPosition >= blurSettings.blurIn.start && normalizedPosition <= blurSettings.blurIn.end) {
 				const blurInProgress =
 					(normalizedPosition - blurSettings.blurIn.start) /
 					(blurSettings.blurIn.end - blurSettings.blurIn.start);
 				blur = blurSettings.maxBlur * (1 - blurInProgress);
 			} else if (normalizedPosition < blurSettings.blurIn.start) {
-				// Before blur in starts: full blur
 				blur = blurSettings.maxBlur;
-			} else if (
-				normalizedPosition >= blurSettings.blurOut.start &&
-				normalizedPosition <= blurSettings.blurOut.end
-			) {
-				// Blur out: blur goes from 0 to maxBlur within the blur out range
+			} else if (normalizedPosition >= blurSettings.blurOut.start && normalizedPosition <= blurSettings.blurOut.end) {
 				const blurOutProgress =
 					(normalizedPosition - blurSettings.blurOut.start) /
 					(blurSettings.blurOut.end - blurSettings.blurOut.start);
 				blur = blurSettings.maxBlur * blurOutProgress;
 			} else if (normalizedPosition > blurSettings.blurOut.end) {
-				// After blur out ends: full blur
 				blur = blurSettings.maxBlur;
 			}
 
-			// Clamp blur to reasonable values
 			blur = Math.max(0, Math.min(blurSettings.maxBlur, blur));
 
 			// Update material uniforms
@@ -488,20 +594,22 @@ function GalleryScene({
 
 				const worldZ = plane.z - depthRange / 2;
 
-				// Calculate scale to maintain aspect ratio
-				const aspect = texture.image
-					? texture.image.width / texture.image.height
-					: 1;
+				// Calculate scale to maintain aspect ratio with responsive sizing
+				const aspect = texture.image ? texture.image.width / texture.image.height : 1;
+				const baseSize = 2 * responsiveScale;
 				const scale: [number, number, number] =
-					aspect > 1 ? [2 * aspect, 2, 1] : [2, 2 / aspect, 1];
+					aspect > 1 ? [baseSize * aspect, baseSize, 1] : [baseSize, baseSize / aspect, 1];
 
 				return (
 					<ImagePlane
 						key={plane.index}
 						texture={texture}
-						position={[plane.x, plane.y, worldZ]} // Position planes relative to camera center
+						position={[plane.x, plane.y, worldZ]}
 						scale={scale}
 						material={material}
+						imageIndex={plane.imageIndex}
+						onHover={handleImageHover}
+						onClick={onImageClick}
 					/>
 				);
 			})}
@@ -538,6 +646,20 @@ function FallbackGallery({ images }: { images: ImageItem[] }) {
 	);
 }
 
+// Scroll hint indicator component
+function ScrollHint() {
+	return (
+		<div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none z-10 animate-bounce opacity-50">
+			<div className="flex flex-col items-center gap-1 text-white/60">
+				<span className="text-[10px] uppercase tracking-widest font-medium">Scroll to explore</span>
+				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+					<path d="M12 5v14M5 12l7 7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+				</svg>
+			</div>
+		</div>
+	);
+}
+
 export default function InfiniteGallery({
 	images,
 	className = "h-96 w-full",
@@ -551,22 +673,27 @@ export default function InfiniteGallery({
 		blurOut: { start: 0.4, end: 0.43 },
 		maxBlur: 8.0,
 	},
+	onImageHover,
+	onImageClick,
 }: InfiniteGalleryProps) {
 	const [webglSupported, setWebglSupported] = useState(true);
+	const [showHint, setShowHint] = useState(true);
 
 	useEffect(() => {
 		// Check WebGL support
 		try {
 			const canvas = document.createElement("canvas");
-			const gl =
-				canvas.getContext("webgl") ||
-				canvas.getContext("experimental-webgl");
+			const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
 			if (!gl) {
 				setWebglSupported(false);
 			}
 		} catch (e) {
 			setWebglSupported(false);
 		}
+
+		// Hide scroll hint after 4 seconds
+		const timer = setTimeout(() => setShowHint(false), 4000);
+		return () => clearTimeout(timer);
 	}, []);
 
 	if (!webglSupported) {
@@ -578,17 +705,21 @@ export default function InfiniteGallery({
 	}
 
 	return (
-		<div className={className} style={style}>
+		<div className={`relative ${className}`} style={style}>
 			<Canvas
 				camera={{ position: [0, 0, 0], fov: 55 }}
 				gl={{ antialias: true, alpha: true }}
+				style={{ touchAction: "none" }}
 			>
 				<GalleryScene
 					images={images}
 					fadeSettings={fadeSettings}
 					blurSettings={blurSettings}
+					onImageHover={onImageHover}
+					onImageClick={onImageClick}
 				/>
 			</Canvas>
+			{showHint && <ScrollHint />}
 		</div>
 	);
 }

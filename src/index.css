@@ -31,16 +31,191 @@
 	}
 }
 
+* {
+	-webkit-tap-highlight-color: transparent;
+}
+
+html {
+	scroll-behavior: smooth;
+}
+
 body {
 	background: var(--background);
 	color: var(--foreground);
 	font-family: Arial, Helvetica, sans-serif;
+	overflow-x: hidden;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 
+/* Font utilities */
 .font-mono {
 	font-family: var(--font-mono);
 }
 
 .font-serif {
 	font-family: var(--font-serif);
+}
+
+/* Smooth animations for all interactive elements */
+a,
+button {
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Touch-friendly tap targets */
+@media (max-width: 640px) {
+
+	a,
+	button {
+		min-height: 44px;
+		min-width: 44px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+	}
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.2);
+	border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: rgba(255, 255, 255, 0.3);
+}
+
+/* Bounce animation for scroll hint */
+@keyframes bounce {
+
+	0%,
+	100% {
+		transform: translateY(0) translateX(-50%);
+	}
+
+	50% {
+		transform: translateY(-8px) translateX(-50%);
+	}
+}
+
+.animate-bounce {
+	animation: bounce 2s ease-in-out infinite;
+}
+
+/* Fade in animation utility */
+@keyframes fadeInUp {
+	from {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.animate-fade-in-up {
+	animation: fadeInUp 0.8s ease-out forwards;
+}
+
+/* Pulse animation for focus elements */
+@keyframes pulse-soft {
+
+	0%,
+	100% {
+		opacity: 1;
+	}
+
+	50% {
+		opacity: 0.7;
+	}
+}
+
+.animate-pulse-soft {
+	animation: pulse-soft 3s ease-in-out infinite;
+}
+
+/* Glass morphism utility */
+.glass {
+	background: rgba(0, 0, 0, 0.6);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Safe area padding for mobile devices */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+	.safe-area-bottom {
+		padding-bottom: env(safe-area-inset-bottom);
+	}
+}
+
+/* Prevent text selection on interactive 3D canvas */
+canvas {
+	-webkit-user-select: none;
+	user-select: none;
+	touch-action: none;
+}
+
+/* Performance optimization for animations */
+.gpu-accelerated {
+	transform: translateZ(0);
+	will-change: transform, opacity;
+}
+
+@keyframes modal-in {
+	from {
+		opacity: 0;
+		transform: scale(0.95) translateY(10px);
+	}
+
+	to {
+		opacity: 1;
+		transform: scale(1) translateY(0);
+	}
+}
+
+.animate-modal-in {
+	animation: modal-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes backdrop-in {
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
+}
+
+.animate-backdrop-in {
+	animation: backdrop-in 0.4s ease-out forwards;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+
+	.animate-bounce {
+		animation: none;
+	}
 }
