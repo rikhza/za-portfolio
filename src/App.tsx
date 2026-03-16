@@ -1,6 +1,6 @@
 import InfiniteGallery from "@/components/InfiniteGallery";
 import { Linkedin, Github, Mail, X, Code2, Globe } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface Project {
 	src: string;
@@ -12,16 +12,126 @@ interface Project {
 	github?: string;
 }
 
+function CustomCursor() {
+	const dotRef = useRef<HTMLDivElement>(null);
+	const ringRef = useRef<HTMLDivElement>(null);
+	const pos = useRef({ x: -100, y: -100 });
+	const ringPos = useRef({ x: -100, y: -100 });
+
+	useEffect(() => {
+		const move = (e: MouseEvent) => {
+			pos.current = { x: e.clientX, y: e.clientY };
+		};
+		window.addEventListener("mousemove", move);
+
+		let raf: number;
+		const animate = () => {
+			if (dotRef.current) {
+				dotRef.current.style.transform = `translate(${pos.current.x - 3}px, ${pos.current.y - 3}px)`;
+			}
+			ringPos.current.x += (pos.current.x - ringPos.current.x) * 0.1;
+			ringPos.current.y += (pos.current.y - ringPos.current.y) * 0.1;
+			if (ringRef.current) {
+				ringRef.current.style.transform = `translate(${ringPos.current.x - 16}px, ${ringPos.current.y - 16}px)`;
+			}
+			raf = requestAnimationFrame(animate);
+		};
+		raf = requestAnimationFrame(animate);
+
+		return () => {
+			window.removeEventListener("mousemove", move);
+			cancelAnimationFrame(raf);
+		};
+	}, []);
+
+	return (
+		<>
+			<div ref={dotRef} className="fixed top-0 left-0 w-1.5 h-1.5 bg-white rounded-full pointer-events-none z-[200] mix-blend-difference hidden md:block" />
+			<div ref={ringRef} className="fixed top-0 left-0 w-8 h-8 border border-white/60 rounded-full pointer-events-none z-[200] mix-blend-difference hidden md:block" />
+		</>
+	);
+}
+
+function IntroScreen({ phase }: { phase: "visible" | "exiting" | "done" }) {
+	if (phase === "done") return null;
+
+	const letters = "RIKHZA".split("");
+
+	return (
+		<div
+			className={`fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center transition-all duration-700 ease-in-out ${phase === "exiting" ? "opacity-0 -translate-y-3" : "opacity-100 translate-y-0"
+				}`}
+		>
+			<div className="text-center select-none">
+				<div className="flex items-end justify-center overflow-hidden">
+					{letters.map((char, i) => (
+						<span
+							key={i}
+							className="font-serif text-white font-bold tracking-tight"
+							style={{
+								fontSize: "clamp(3.5rem, 12vw, 9rem)",
+								display: "inline-block",
+								animation: "letterReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+								animationDelay: `${i * 70}ms`,
+								opacity: 0,
+							}}
+						>
+							{char}
+						</span>
+					))}
+				</div>
+				<p
+					className="font-mono text-white/30 uppercase mt-3"
+					style={{
+						fontSize: "clamp(0.55rem, 1.5vw, 0.7rem)",
+						letterSpacing: "0.45em",
+						animation: "fadeInSimple 0.6s ease forwards",
+						animationDelay: "600ms",
+						opacity: 0,
+					}}
+				>
+					system architect · backend dev
+				</p>
+			</div>
+
+			{/* Corner decorations */}
+			<div className="absolute top-8 left-8 w-5 h-5 border-t border-l border-white/20" />
+			<div className="absolute top-8 right-8 w-5 h-5 border-t border-r border-white/20" />
+			<div className="absolute bottom-8 left-8 w-5 h-5 border-b border-l border-white/20" />
+			<div className="absolute bottom-8 right-8 w-5 h-5 border-b border-r border-white/20" />
+
+			{/* Bottom line */}
+			<div
+				className="absolute bottom-10 left-1/2 -translate-x-1/2 font-mono text-white/20 uppercase"
+				style={{
+					fontSize: "0.55rem",
+					letterSpacing: "0.3em",
+					animation: "fadeInSimple 0.6s ease forwards",
+					animationDelay: "900ms",
+					opacity: 0,
+				}}
+			>
+				portfolio
+			</div>
+		</div>
+	);
+}
+
 export default function App() {
 	const [isLoaded, setIsLoaded] = useState(false);
 	const [showContent, setShowContent] = useState(false);
 	const [hoveredImage, setHoveredImage] = useState<string | null>(null);
 	const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+	const [introPhase, setIntroPhase] = useState<"visible" | "exiting" | "done">("visible");
 
 	useEffect(() => {
-		const timer1 = setTimeout(() => setIsLoaded(true), 100);
-		const timer2 = setTimeout(() => setShowContent(true), 600);
+		const exitTimer = setTimeout(() => setIntroPhase("exiting"), 2300);
+		const doneTimer = setTimeout(() => setIntroPhase("done"), 3000);
+		const timer1 = setTimeout(() => setIsLoaded(true), 2700);
+		const timer2 = setTimeout(() => setShowContent(true), 3200);
 		return () => {
+			clearTimeout(exitTimer);
+			clearTimeout(doneTimer);
 			clearTimeout(timer1);
 			clearTimeout(timer2);
 		};
@@ -89,9 +199,11 @@ export default function App() {
 
 	return (
 		<main
-			className={`min-h-screen transition-opacity duration-1000 ease-out bg-black ${isLoaded ? "opacity-100" : "opacity-0"
+			className={`min-h-screen transition-opacity duration-1000 ease-out bg-black md:cursor-none ${isLoaded ? "opacity-100" : "opacity-0"
 				}`}
 		>
+			<IntroScreen phase={introPhase} />
+			<CustomCursor />
 			<InfiniteGallery
 				images={projects}
 				speed={1.2}
