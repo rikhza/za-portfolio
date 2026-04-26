@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="za">
+	<rect width="180" height="180" rx="28" fill="#050505"/>
+	<path d="M34 52h73L40 128h78" fill="none" stroke="#f7f0df" stroke-width="13" stroke-linecap="square" stroke-linejoin="bevel"/>
+	<path d="M121 56c15 0 25 11 25 26v48" fill="none" stroke="#9ee7c5" stroke-width="13" stroke-linecap="square"/>
+	<path d="M88 124h58" fill="none" stroke="#9ee7c5" stroke-width="13" stroke-linecap="square"/>
+</svg>

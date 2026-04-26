@@ -631,10 +631,7 @@ function FallbackGallery({ images }: { images: ImageItem[] }) {
 	);
 
 	return (
-		<div className="flex flex-col items-center justify-center h-full bg-gray-100 p-4">
-			<p className="text-gray-600 mb-4">
-				WebGL not supported. Showing image list:
-			</p>
+		<div className="flex h-full flex-col items-center justify-center bg-[#050505] p-4">
 			<div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
 				{normalizedImages.map((img, i) => (
 					<img
@@ -652,10 +649,9 @@ function FallbackGallery({ images }: { images: ImageItem[] }) {
 // Scroll hint indicator component
 function ScrollHint() {
 	return (
-		<div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none z-10 animate-bounce opacity-50">
-			<div className="flex flex-col items-center gap-1 text-white/60">
-				<span className="text-[10px] uppercase tracking-widest font-medium">Scroll to explore</span>
-				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+		<div className="pointer-events-none absolute bottom-6 left-1/2 z-10 -translate-x-1/2 text-white/60">
+			<div className="animate-hint-pulse">
+				<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
 					<path d="M12 5v14M5 12l7 7 7-7" strokeLinecap="round" strokeLinejoin="round" />
 				</svg>
 			</div>

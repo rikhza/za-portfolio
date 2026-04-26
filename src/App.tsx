@@ -1,394 +1,663 @@
-import InfiniteGallery from "@/components/InfiniteGallery";
-import { Linkedin, Github, Mail, X, Code2, Globe } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import {
+	ArrowUpRight,
+	BriefcaseBusiness,
+	Cloud,
+	Code2,
+	Database,
+	Github,
+	GraduationCap,
+	Linkedin,
+	Mail,
+	Moon,
+	ServerCog,
+	Sparkles,
+	Sun,
+	Terminal,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 
-interface Project {
-	src: string;
-	alt: string;
-	title: string;
+interface RepoProject {
+	name: string;
 	description: string;
 	stack: string[];
-	url?: string;
-	github?: string;
+	language: string;
+	updated: string;
+	url: string;
 }
 
-function CustomCursor() {
-	const dotRef = useRef<HTMLDivElement>(null);
-	const ringRef = useRef<HTMLDivElement>(null);
-	const pos = useRef({ x: -100, y: -100 });
-	const ringPos = useRef({ x: -100, y: -100 });
+const repoProjects: RepoProject[] = [
+	{
+		name: "tangkapp-landing",
+		description:
+			"Astro landing repository for Tangkapp, focused on a clean product-facing web surface.",
+		stack: ["Astro", "TypeScript", "Landing"],
+		language: "Astro",
+		updated: "Apr 2026",
+		url: "https://github.com/rikhza/tangkapp-landing",
+	},
+	{
+		name: "setrimtam",
+		description:
+			"TypeScript project from the latest GitHub activity, shaped as a modern app/code experiment.",
+		stack: ["TypeScript", "App", "Web"],
+		language: "TypeScript",
+		updated: "Apr 2026",
+		url: "https://github.com/rikhza/setrimtam",
+	},
+	{
+		name: "za-portfolio",
+		description:
+			"Personal portfolio repository, built around fast UI, modern frontend tooling, and a sharper identity.",
+		stack: ["TypeScript", "React", "Vite"],
+		language: "TypeScript",
+		updated: "Mar 2026",
+		url: "https://github.com/rikhza/za-portfolio",
+	},
+	{
+		name: "personal-next-portfolio",
+		description:
+			"Next.js portfolio project and earlier personal site iteration.",
+		stack: ["Next.js", "TypeScript", "Portfolio"],
+		language: "TypeScript",
+		updated: "Oct 2025",
+		url: "https://github.com/rikhza/personal-next-portfolio",
+	},
+	{
+		name: "zaa",
+		description:
+			"JavaScript repo connected to the is-a.dev subdomain workflow.",
+		stack: ["JavaScript", "DNS", "Web"],
+		language: "JavaScript",
+		updated: "Oct 2025",
+		url: "https://github.com/rikhza/zaa",
+	},
+	{
+		name: "cookpedia.cigi.co.id",
+		description: "PHP app repository for Cookpedia under Cigi.",
+		stack: ["PHP", "MySQL", "App"],
+		language: "PHP",
+		updated: "Sep 2025",
+		url: "https://github.com/rikhza/cookpedia.cigi.co.id",
+	},
+];
 
-	useEffect(() => {
-		const move = (e: MouseEvent) => {
-			pos.current = { x: e.clientX, y: e.clientY };
-		};
-		window.addEventListener("mousemove", move);
+const workItems = [
+	{
+		title: "Bank Central Asia Tbk.",
+		status: "Current",
+		meta: "IT Specialist",
+		points: [
+			"Working inside financial-scale technical environments with an emphasis on reliability and operational clarity.",
+			"Combining system thinking, delivery discipline, and practical engineering across internal technical workflows.",
+		],
+		stack: ["Linux+", "AWS", "Systems", "Ops"],
+	},
+	{
+		title: "BINUS University",
+		status: "Academic",
+		meta: "Master CS",
+		points: [
+			"Focused on software engineering foundations, data, architecture, and applied research thinking.",
+			"Used academic projects to sharpen backend, database, and product-oriented implementation skills.",
+		],
+		stack: ["Research", "Data", "Architecture"],
+	},
+];
 
-		let raf: number;
-		const animate = () => {
-			if (dotRef.current) {
-				dotRef.current.style.transform = `translate(${pos.current.x - 3}px, ${pos.current.y - 3}px)`;
-			}
-			ringPos.current.x += (pos.current.x - ringPos.current.x) * 0.1;
-			ringPos.current.y += (pos.current.y - ringPos.current.y) * 0.1;
-			if (ringRef.current) {
-				ringRef.current.style.transform = `translate(${ringPos.current.x - 16}px, ${ringPos.current.y - 16}px)`;
-			}
-			raf = requestAnimationFrame(animate);
-		};
-		raf = requestAnimationFrame(animate);
+const skills = [
+	"Next.js",
+	"Laravel",
+	"Express",
+	"React",
+	"Swift",
+	"AWS",
+	"Cloudflare",
+	"PostgreSQL",
+	"MongoDB",
+	"Figma",
+];
 
-		return () => {
-			window.removeEventListener("mousemove", move);
-			cancelAnimationFrame(raf);
-		};
-	}, []);
+const techTone: Record<
+	string,
+	{
+		text: string;
+		bg: string;
+		shadow: string;
+		slug?: string;
+		iconColor?: string;
+	}
+> = {
+	Astro: {
+		text: "A",
+		bg: "#ff5d01",
+		shadow: "#7a2500",
+		slug: "astro",
+		iconColor: "ffffff",
+	},
+	TypeScript: {
+		text: "TS",
+		bg: "#3178c6",
+		shadow: "#0f3c71",
+		slug: "typescript",
+		iconColor: "ffffff",
+	},
+	React: {
+		text: "R",
+		bg: "#61dafb",
+		shadow: "#176d82",
+		slug: "react",
+		iconColor: "050505",
+	},
+	Vite: {
+		text: "V",
+		bg: "#9461fb",
+		shadow: "#40207a",
+		slug: "vite",
+		iconColor: "ffffff",
+	},
+	"Next.js": {
+		text: "N",
+		bg: "#f7f7f7",
+		shadow: "#6b6b6b",
+		slug: "nextdotjs",
+		iconColor: "000000",
+	},
+	JavaScript: {
+		text: "JS",
+		bg: "#f7df1e",
+		shadow: "#7f7000",
+		slug: "javascript",
+		iconColor: "000000",
+	},
+	PHP: {
+		text: "PHP",
+		bg: "#777bb4",
+		shadow: "#303261",
+		slug: "php",
+		iconColor: "ffffff",
+	},
+	MySQL: {
+		text: "SQL",
+		bg: "#00758f",
+		shadow: "#003744",
+		slug: "mysql",
+		iconColor: "ffffff",
+	},
+	AWS: { text: "AWS", bg: "#ff9900", shadow: "#7a3f00" },
+	"Linux+": {
+		text: "L+",
+		bg: "#f4f4f4",
+		shadow: "#5d5d5d",
+		slug: "comptia",
+		iconColor: "000000",
+	},
+	Cloudflare: {
+		text: "CF",
+		bg: "#f48120",
+		shadow: "#743400",
+		slug: "cloudflare",
+		iconColor: "050505",
+	},
+	PostgreSQL: {
+		text: "PG",
+		bg: "#336791",
+		shadow: "#17334b",
+		slug: "postgresql",
+		iconColor: "ffffff",
+	},
+	MongoDB: {
+		text: "MDB",
+		bg: "#47a248",
+		shadow: "#1e5120",
+		slug: "mongodb",
+		iconColor: "ffffff",
+	},
+	Figma: {
+		text: "F",
+		bg: "#a259ff",
+		shadow: "#4b1f7b",
+		slug: "figma",
+		iconColor: "ffffff",
+	},
+	Laravel: {
+		text: "L",
+		bg: "#ff2d20",
+		shadow: "#79120d",
+		slug: "laravel",
+		iconColor: "ffffff",
+	},
+	Express: {
+		text: "EX",
+		bg: "#f4f4f5",
+		shadow: "#5d5d5d",
+		slug: "express",
+		iconColor: "000000",
+	},
+	Swift: {
+		text: "SW",
+		bg: "#f05138",
+		shadow: "#772016",
+		slug: "swift",
+		iconColor: "ffffff",
+	},
+};
+
+const hasTechLogo = (name: string) =>
+	Boolean(techTone[name]?.slug || techTone[name]);
+
+function TechIcon({ name }: { name: string }) {
+	const tone = techTone[name] ?? {
+		text: name.slice(0, 3).toUpperCase(),
+		bg: "#242424",
+		shadow: "#080808",
+	};
 
 	return (
-		<>
-			<div ref={dotRef} className="fixed top-0 left-0 w-1.5 h-1.5 bg-white rounded-full pointer-events-none z-[200] mix-blend-difference hidden md:block" />
-			<div ref={ringRef} className="fixed top-0 left-0 w-8 h-8 border border-white/60 rounded-full pointer-events-none z-[200] mix-blend-difference hidden md:block" />
-		</>
+		<span
+			className="tech-icon"
+			title={name}
+			style={
+				{
+					"--tech-bg": tone.bg,
+					"--tech-shadow": tone.shadow,
+				} as CSSProperties
+			}
+		>
+			{tone.slug ? (
+				<img
+					src={`https://cdn.simpleicons.org/${tone.slug}/${tone.iconColor ?? "ffffff"}`}
+					alt=""
+					loading="lazy"
+				/>
+			) : (
+				<span>{tone.text}</span>
+			)}
+		</span>
 	);
 }
 
-function IntroScreen({ phase }: { phase: "visible" | "exiting" | "done" }) {
-	if (phase === "done") return null;
-
-	const letters = "RIKHZA".split("");
+function TechPill({ name }: { name: string }) {
+	const tone = techTone[name];
 
 	return (
-		<div
-			className={`fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center transition-all duration-700 ease-in-out ${phase === "exiting" ? "opacity-0 -translate-y-3" : "opacity-100 translate-y-0"
-				}`}
+		<span className="tech-pill">
+			{tone ? (
+				<TechIcon name={name} />
+			) : (
+				<span className="generic-tech-mark">
+					{name.slice(0, 3).toUpperCase()}
+				</span>
+			)}
+			{name}
+		</span>
+	);
+}
+
+function BioToken({
+	children,
+	tone = "default",
+}: {
+	children: string;
+	tone?: "default" | "orange" | "green" | "blue";
+}) {
+	return <span className={`bio-token bio-token-${tone}`}>{children}</span>;
+}
+
+function MediumIcon({ className = "h-5 w-5" }: { className?: string }) {
+	return (
+		<svg
+			className={className}
+			viewBox="0 0 24 24"
+			aria-hidden="true"
+			fill="currentColor"
 		>
-			<div className="text-center select-none">
-				<div className="flex items-end justify-center overflow-hidden">
-					{letters.map((char, i) => (
-						<span
-							key={i}
-							className="font-serif text-white font-bold tracking-tight"
-							style={{
-								fontSize: "clamp(3.5rem, 12vw, 9rem)",
-								display: "inline-block",
-								animation: "letterReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards",
-								animationDelay: `${i * 70}ms`,
-								opacity: 0,
-							}}
-						>
-							{char}
-						</span>
-					))}
-				</div>
-				<p
-					className="font-mono text-white/30 uppercase mt-3"
-					style={{
-						fontSize: "clamp(0.55rem, 1.5vw, 0.7rem)",
-						letterSpacing: "0.45em",
-						animation: "fadeInSimple 0.6s ease forwards",
-						animationDelay: "600ms",
-						opacity: 0,
-					}}
-				>
-					system architect · backend dev
-				</p>
-			</div>
-
-			{/* Corner decorations */}
-			<div className="absolute top-8 left-8 w-5 h-5 border-t border-l border-white/20" />
-			<div className="absolute top-8 right-8 w-5 h-5 border-t border-r border-white/20" />
-			<div className="absolute bottom-8 left-8 w-5 h-5 border-b border-l border-white/20" />
-			<div className="absolute bottom-8 right-8 w-5 h-5 border-b border-r border-white/20" />
-
-			{/* Bottom line */}
-			<div
-				className="absolute bottom-10 left-1/2 -translate-x-1/2 font-mono text-white/20 uppercase"
-				style={{
-					fontSize: "0.55rem",
-					letterSpacing: "0.3em",
-					animation: "fadeInSimple 0.6s ease forwards",
-					animationDelay: "900ms",
-					opacity: 0,
-				}}
-			>
-				portfolio
-			</div>
-		</div>
+			<path d="M13.54 12a6.77 6.77 0 0 1-6.77 6.77A6.77 6.77 0 0 1 0 12a6.77 6.77 0 0 1 6.77-6.77A6.77 6.77 0 0 1 13.54 12Zm7.42 0c0 3.52-1.51 6.37-3.38 6.37S14.2 15.52 14.2 12s1.51-6.37 3.38-6.37 3.38 2.85 3.38 6.37ZM24 12c0 3.15-.53 5.7-1.19 5.7-.66 0-1.19-2.55-1.19-5.7s.53-5.7 1.19-5.7C23.47 6.3 24 8.85 24 12Z" />
+		</svg>
 	);
 }
 
 export default function App() {
-	const [isLoaded, setIsLoaded] = useState(false);
-	const [showContent, setShowContent] = useState(false);
-	const [hoveredImage, setHoveredImage] = useState<string | null>(null);
-	const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-	const [introPhase, setIntroPhase] = useState<"visible" | "exiting" | "done">("visible");
+	const [activeSection, setActiveSection] = useState("home");
+	const [theme, setTheme] = useState<"dark" | "light">(() => {
+		if (typeof window === "undefined") return "dark";
+		return window.localStorage.getItem("theme") === "light"
+			? "light"
+			: "dark";
+	});
 
 	useEffect(() => {
-		const exitTimer = setTimeout(() => setIntroPhase("exiting"), 2300);
-		const doneTimer = setTimeout(() => setIntroPhase("done"), 3000);
-		const timer1 = setTimeout(() => setIsLoaded(true), 2700);
-		const timer2 = setTimeout(() => setShowContent(true), 3200);
-		return () => {
-			clearTimeout(exitTimer);
-			clearTimeout(doneTimer);
-			clearTimeout(timer1);
-			clearTimeout(timer2);
-		};
+		document.documentElement.dataset.theme = theme;
+		window.localStorage.setItem("theme", theme);
+	}, [theme]);
+
+	useEffect(() => {
+		const observer = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						setActiveSection(entry.target.id);
+					}
+				});
+			},
+			{ rootMargin: "-40% 0px -60% 0px" }
+		);
+
+		const sections = document.querySelectorAll("section[id]");
+		sections.forEach((section) => observer.observe(section));
+
+		return () => observer.disconnect();
 	}, []);
 
-	const projects: Project[] = [
-		{
-			src: "/1-rikhza.webp",
-			alt: "rikhza github",
-			title: "GitHub Profile",
-			description: "Explore my open-source contributions, repositories, and development activity on GitHub.",
-			stack: ["Git", "GitHub Actions", "Open Source"],
-			url: "https://github.com/rikhza",
-			github: "https://github.com/rikhza"
-		},
-		{
-			src: "/2-tangkapp.webp",
-			alt: "tangkapp project",
-			title: "Tangkapp.id",
-			description: "A sophisticated document flow and bureaucracy web application designed to streamline institutional processes.",
-			stack: ["MongoDB", "Express.js", "React", "Node.js"],
-			url: "https://tangkapp.id"
-		},
-		{
-			src: "/3-lokakota.webp",
-			alt: "lokakota project",
-			title: "Lokakota",
-			description: "A digital media landing page and journal system integration using Open Journal Systems (OJS).",
-			stack: ["WordPress", "OJS", "PHP", "MySQL"],
-			url: "https://lokakota.id"
-		},
-		{
-			src: "/4-coconutforest.webp",
-			alt: "coconutforest project",
-			title: "Coconut Forest",
-			description: "Premium landing page for an export-import business, showcasing high-quality local products to the global market.",
-			stack: ["Svelte", "Vite", "Tailwind CSS"],
-			url: "https://coconutforest.cigidigital.com"
-		},
-		{
-			src: "/5-deltatigaenam.webp",
-			alt: "deltatigaenam project",
-			title: "Delta Tiga Enam",
-			description: "Professional landing page for a consultancy firm, emphasizing strategic growth and innovative solutions.",
-			stack: ["React", "Vite", "Tailwind CSS"],
-			url: "https://deltatigaenam.com"
-		},
-		{
-			src: "/6-cjdb.webp",
-			alt: "cjdb project",
-			title: "CJDB",
-			description: "A modern JSON Database SaaS providing high-performance data storage solutions for cloud applications.",
-			stack: ["Next.js", "TypeScript", "Prisma", "PostgreSQL"],
-			url: "https://json.cigidigital.com"
-		},
-	];
-
-	const handleImageHover = (_index: number | null, title?: string) => {
-		setHoveredImage(title || null);
-	};
-
-	const handleImageClick = (index: number) => {
-		setSelectedProject(projects[index % projects.length]);
-	};
-
 	return (
-		<main
-			className={`min-h-screen transition-opacity duration-1000 ease-out bg-black md:cursor-none ${isLoaded ? "opacity-100" : "opacity-0"
-				}`}
-		>
-			<IntroScreen phase={introPhase} />
-			<CustomCursor />
-			<InfiniteGallery
-				images={projects}
-				speed={1.2}
-				zSpacing={3}
-				visibleCount={12}
-				falloff={{ near: 0.8, far: 14 }}
-				className="h-screen w-full rounded-lg overflow-hidden"
-				onImageHover={handleImageHover}
-				onImageClick={handleImageClick}
-			/>
+		<main className="portfolio-root min-h-screen" data-theme={theme}>
+			<div className="mx-auto min-h-screen w-full max-w-[650px] px-5 py-5 sm:px-6">
+				<header className="site-nav sticky top-3 z-40">
+					<nav className="nav-pill" aria-label="Primary navigation">
+						<a href="#home" data-active={activeSection === "home"}>Home</a>
+						<a href="#work" data-active={activeSection === "work"}>Work</a>
+						<a href="#projects" data-active={activeSection === "projects"}>Projects</a>
+						<a href="#about" data-active={activeSection === "about"}>About</a>
+					</nav>
 
-			{/* Main content overlay */}
-			<div
-				className={`h-screen inset-0 pointer-events-none fixed flex items-center justify-center text-center px-4 sm:px-6 md:px-8 mix-blend-exclusion text-white transition-all duration-1000 ease-out ${showContent ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-					} ${selectedProject ? "blur-sm scale-95 opacity-20" : ""}`}
-			>
-				<div className="max-w-5xl">
-					<h1 className="font-serif text-2xl sm:text-3xl md:text-5xl lg:text-6xl tracking-tight leading-relaxed">
-						<span
-							className={`block text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-bold mb-2 sm:mb-3 transition-all duration-700 delay-100 ${showContent ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-								}`}
-						>
-							rikhza/ri·za
-						</span>
-						<span
-							className={`block text-base sm:text-xl md:text-2xl lg:text-3xl space-x-1 sm:space-x-2 transition-all duration-700 delay-300 ${showContent ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-								}`}
-						>
-							<em className="text-lg sm:text-2xl md:text-3xl lg:text-4xl">n</em>
-							<span className="inline-block">1 system architect;</span>
-							<span className="inline-block">2 backend dev;</span>
-						</span>
-					</h1>
-
-					<div
-						className={`mt-10 sm:mt-12 font-mono uppercase text-[10px] sm:text-[11px] font-semibold pointer-events-auto transition-all duration-700 delay-500 ${showContent ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-							}`}
-					>
-						<div className="flex flex-col items-center gap-6">
-							<div className="flex items-center justify-center gap-8">
-								<a
-									href="https://linkedin.com/in/rikhza"
-									target="_blank"
-									rel="noopener noreferrer"
-									className="group flex flex-col items-center gap-2 hover:opacity-100 transition-all duration-300"
-								>
-									<div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center group-hover:scale-110 group-hover:border-white/50 transition-all">
-										<Linkedin className="w-4 h-4" />
-									</div>
-									<span className="text-[9px] tracking-[0.2em] opacity-50 group-hover:opacity-100">LINKEDIN</span>
-								</a>
-								<a
-									href="https://github.com/rikhza"
-									target="_blank"
-									rel="noopener noreferrer"
-									className="group flex flex-col items-center gap-2 hover:opacity-100 transition-all duration-300"
-								>
-									<div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center group-hover:scale-110 group-hover:border-white/50 transition-all">
-										<Github className="w-4 h-4" />
-									</div>
-									<span className="text-[9px] tracking-[0.2em] opacity-50 group-hover:opacity-100">GITHUB</span>
-								</a>
-								<a
-									href="mailto:rikhza11@gmail.com"
-									className="group flex flex-col items-center gap-2 hover:opacity-100 transition-all duration-300"
-								>
-									<div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center group-hover:scale-110 group-hover:border-white/50 transition-all">
-										<Mail className="w-4 h-4" />
-									</div>
-									<span className="text-[9px] tracking-[0.2em] opacity-50 group-hover:opacity-100">EMAIL</span>
-								</a>
-							</div>
-							<p className="opacity-40 text-[9px] tracking-widest uppercase">Contact & Collaboration</p>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			{/* Project Detail Modal */}
-			<div
-				className={`fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 transition-all duration-500 ${selectedProject ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
-					}`}
-			>
-				<div
-					className={`absolute inset-0 bg-black/80 backdrop-blur-xl ${selectedProject ? "animate-backdrop-in" : ""}`}
-					onClick={() => setSelectedProject(null)}
-				/>
-
-				<div className={`relative w-full max-w-4xl bg-zinc-900/50 rounded-2xl border border-white/10 overflow-hidden shadow-2xl transition-all duration-500 ${selectedProject ? "animate-modal-in" : ""}`}>
 					<button
-						onClick={() => setSelectedProject(null)}
-						className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/20 hover:bg-black/40 text-white/50 hover:text-white transition-all"
+						type="button"
+						className="theme-button"
+						onClick={() =>
+							setTheme((current) =>
+								current === "dark" ? "light" : "dark",
+							)
+						}
+						aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
 					>
-						<X className="w-5 h-5" />
+						{theme === "dark" ? (
+							<Sun className="h-3.5 w-3.5" />
+						) : (
+							<Moon className="h-3.5 w-3.5" />
+						)}
 					</button>
+				</header>
 
-					<div className="flex flex-col md:flex-row h-full max-h-[85vh] overflow-y-auto">
-						<div className="w-full md:w-1/2 aspect-video md:aspect-auto overflow-hidden bg-zinc-800">
-							<img
-								src={selectedProject?.src}
-								alt={selectedProject?.alt}
-								className="w-full h-full object-cover"
-							/>
-						</div>
+				<section id="home" className="pt-20">
+					<div className="avatar-mark">
+						<span>za</span>
+						<Sparkles className="absolute right-4 top-4 h-4 w-4" />
+					</div>
 
-						<div className="w-full md:w-1/2 p-6 sm:p-10 flex flex-col justify-between">
-							<div>
-								<h2 className="text-3xl sm:text-4xl font-serif text-white mb-4">
-									{selectedProject?.title}
-								</h2>
-								<p className="text-zinc-400 text-sm sm:text-base leading-relaxed mb-8">
-									{selectedProject?.description}
-								</p>
+					<h1 className="mt-7 text-4xl font-bold tracking-[-0.045em] text-white sm:text-5xl">
+						Hi, I&apos;m Rikhza
+					</h1>
+					<p className="mt-2 text-3xl font-bold tracking-[-0.04em] text-zinc-500 sm:text-4xl">
+						A Dev.
+					</p>
 
-								<div className="space-y-6">
-									<div>
-										<h3 className="text-[10px] tracking-[0.2em] uppercase text-zinc-500 font-bold mb-4 flex items-center gap-2">
-											<Code2 className="w-3 h-3" /> Tech Stack
-										</h3>
-										<div className="flex flex-wrap gap-3">
-											{selectedProject?.stack.map((item) => {
-												const slug = item.toLowerCase().replace(/\s+/g, "").replace(/\./g, "dot");
-												const iconUrl = `https://cdn.simpleicons.org/${slug}/ffffff`;
+					<p className="mt-5 text-sm leading-7 text-zinc-400">
+						<BioToken tone="orange">System Architect</BioToken> and{" "}
+						<BioToken>Developer</BioToken> with a strong foundation
+						in Information Systems and a{" "}
+						<BioToken tone="blue">
+							Master&apos;s in Computer Science
+						</BioToken>{" "}
+						from BINUS University. Certified in{" "}
+						<TechPill name="Linux+" /> and <TechPill name="AWS" />,
+						with hands-on experience in{" "}
+						<BioToken>full-stack development</BioToken>,{" "}
+						<BioToken tone="green">devops</BioToken>, and{" "}
+						<BioToken tone="blue">cloud computing</BioToken>. Strong
+						skills in system architecture design,
+						<BioToken tone="green">automation</BioToken>, and
+						scalable application deployment. Proven track record
+						leading system architecture and development projects for
+						government and corporate, combining technical expertise
+						with project leadership to deliver{" "}
+						<BioToken tone="orange">
+							scalable digital solutions
+						</BioToken>
+						.
+					</p>
 
-												return (
-													<div
-														key={item}
-														className="group/badge flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 text-white/70 border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all duration-300"
-													>
-														<img
-															src={iconUrl}
-															alt=""
-															className="w-3.5 h-3.5 opacity-70 group-hover/badge:opacity-100 transition-opacity"
-															onError={(e) => (e.currentTarget.style.display = "none")}
-														/>
-														<span className="text-[10px] font-mono tracking-tight whitespace-nowrap">
-															{item}
-														</span>
-													</div>
-												);
-											})}
+					<div className="mt-7 flex flex-wrap gap-3">
+						<a
+							className="light-button"
+							href="mailto:rikhza11@gmail.com"
+						>
+							<Mail className="h-3.5 w-3.5" />
+							Get in touch
+						</a>
+						<a
+							className="dark-button"
+							href="https://github.com/rikhza"
+							target="_blank"
+							rel="noreferrer"
+						>
+							<Github className="h-3.5 w-3.5" />
+							GitHub / CV
+						</a>
+					</div>
+
+					<div className="mt-7 flex flex-wrap gap-3 text-zinc-500">
+						<a
+							className="social-icon"
+							href="https://github.com/rikhza"
+							target="_blank"
+							rel="noreferrer"
+							aria-label="GitHub"
+						>
+							<Github className="h-5 w-5" />
+						</a>
+						<a
+							className="social-icon"
+							href="https://www.linkedin.com/in/rikhza/"
+							target="_blank"
+							rel="noreferrer"
+							aria-label="LinkedIn"
+						>
+							<Linkedin className="h-5 w-5" />
+						</a>
+						<a
+							className="social-icon"
+							href="https://medium.com/@its.rzm11"
+							target="_blank"
+							rel="noreferrer"
+							aria-label="Medium"
+						>
+							<MediumIcon />
+						</a>
+						<a
+							className="social-icon"
+							href="mailto:rikhza11@gmail.com"
+							aria-label="Email"
+						>
+							<Mail className="h-5 w-5" />
+						</a>
+						<Terminal className="h-5 w-5" />
+						<Cloud className="h-5 w-5" />
+						<Database className="h-5 w-5" />
+						<ServerCog className="h-5 w-5" />
+						<Code2 className="h-5 w-5" />
+					</div>
+				</section>
+
+				<section id="work" className="section-block">
+					<div className="eyebrow">Featured</div>
+					<h2 className="section-title">Experience</h2>
+
+					<div className="mt-5 space-y-8">
+						{workItems.map((item) => (
+							<article key={item.title} className="work-card">
+								<div className="flex items-start justify-between gap-4">
+									<div className="flex gap-3">
+										<div className="work-logo">
+											{item.title ===
+											"BINUS University" ? (
+												<GraduationCap className="h-6 w-6" />
+											) : (
+												<BriefcaseBusiness className="h-6 w-6" />
+											)}
+										</div>
+										<div>
+											<div className="flex flex-wrap items-center gap-2">
+												<h3 className="text-base font-semibold text-white">
+													{item.title}
+												</h3>
+												<span className="status-badge">
+													{item.status}
+												</span>
+											</div>
+											<p className="text-sm text-zinc-400">
+												{item.role}
+											</p>
 										</div>
 									</div>
+									<p className="shrink-0 text-right text-xs leading-5 text-zinc-500">
+										{item.meta}
+									</p>
 								</div>
-							</div>
 
-							<div className="mt-10 flex flex-wrap gap-4">
-								{selectedProject?.url && (
-									<a
-										href={selectedProject.url}
-										target="_blank"
-										rel="noopener noreferrer"
-										className="flex items-center gap-2 px-6 py-3 rounded-full bg-white text-black text-xs font-bold hover:scale-105 transition-all"
-									>
-										<Globe className="w-4 h-4" /> Visit Website
-									</a>
-								)}
-								{selectedProject?.github && (
-									<a
-										href={selectedProject.github}
-										target="_blank"
-										rel="noopener noreferrer"
-										className="flex items-center gap-2 px-6 py-3 rounded-full bg-zinc-800 text-white text-xs font-bold border border-white/10 hover:border-white/20 transition-all"
-									>
-										<Github className="w-4 h-4" /> Repository
-									</a>
-								)}
+								<div className="mt-4 flex flex-wrap gap-2">
+									{item.stack.map((stack) => (
+										<TechPill key={stack} name={stack} />
+									))}
+								</div>
+
+								<ul className="mt-5 space-y-3 text-sm leading-7 text-zinc-400">
+									{item.points.map((point) => (
+										<li key={point}>• {point}</li>
+									))}
+								</ul>
+							</article>
+						))}
+					</div>
+				</section>
+
+				<section id="projects" className="section-block">
+					<div className="eyebrow">From GitHub</div>
+					<div className="flex items-end justify-between gap-4">
+						<h2 className="section-title">Projects</h2>
+						<a
+							className="tiny-link"
+							href="https://github.com/rikhza?tab=repositories"
+							target="_blank"
+							rel="noreferrer"
+						>
+							All repos <ArrowUpRight className="h-3.5 w-3.5" />
+						</a>
+					</div>
+
+					<div className="mt-5 grid gap-4 sm:grid-cols-2">
+						{repoProjects.map((project) => (
+							<a
+								key={project.name}
+								href={project.url}
+								target="_blank"
+								rel="noreferrer"
+								className="repo-card"
+							>
+								<div className="repo-orbit" aria-hidden="true">
+									{project.stack
+										.filter(hasTechLogo)
+										.map((stack) => (
+											<TechIcon
+												key={stack}
+												name={stack}
+											/>
+										))}
+									{project.stack.filter(
+										(stack) => !hasTechLogo(stack),
+									).length > 0 && (
+										<div className="orbit-tags">
+											{project.stack
+												.filter(
+													(stack) =>
+														!hasTechLogo(stack),
+												)
+												.map((stack) => (
+													<span key={stack}>
+														{stack}
+													</span>
+												))}
+										</div>
+									)}
+								</div>
+
+								<div className="mt-5 flex items-center justify-between gap-3">
+									<h3>{project.name}</h3>
+									<ArrowUpRight className="h-4 w-4 text-zinc-500" />
+								</div>
+
+								<p className="mt-3 text-sm leading-6 text-zinc-400">
+									{project.description}
+								</p>
+
+								<div className="mt-5 flex items-center justify-between gap-3">
+									<span className="language-dot">
+										<span />
+										{project.language}
+									</span>
+									<span className="text-xs text-zinc-600">
+										{project.updated}
+									</span>
+								</div>
+							</a>
+						))}
+					</div>
+				</section>
+
+				<section id="about" className="section-block">
+					<div className="eyebrow">About</div>
+					<h2 className="section-title">Me</h2>
+
+					<div className="about-panel mt-5">
+						<div className="about-photo">
+							<span>RZ</span>
+						</div>
+						<div>
+							<h3 className="text-xl font-semibold tracking-[-0.03em] text-white">
+								Muhammad Rikhza Maulana
+							</h3>
+							<p className="mt-3 text-sm leading-7 text-zinc-400">
+								Known online as rikhza or Riza. I move between
+								fullstack product work, infrastructure choices,
+								database modeling, and visual polish. My GitHub
+								shows the range: Astro landing pages, TypeScript
+								apps, Next.js portfolio experiments, PHP
+								products, and practical web infrastructure work.
+							</p>
+							<p className="mt-5 text-sm font-medium text-zinc-200">
+								My Skills
+							</p>
+							<div className="mt-3 flex flex-wrap gap-2">
+								{skills.map((skill) => (
+									<TechIcon key={skill} name={skill} />
+								))}
 							</div>
 						</div>
 					</div>
-				</div>
-			</div>
+				</section>
 
-			{/* Hovered image title indicator */}
-			<div
-				className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-20 transition-all duration-300 ${hoveredImage && !selectedProject ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
-					}`}
-			>
-				<div className="bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 flex items-center gap-2">
-					<span className="text-white/90 text-[10px] tracking-widest font-bold uppercase transition-all duration-300">
-						{hoveredImage}
-					</span>
-					<div className="w-1 h-1 rounded-full bg-white/30 animate-pulse" />
-					<span className="text-white/40 text-[9px] uppercase tracking-tighter">Click for details</span>
-				</div>
+				<section className="section-block">
+					<p className="mt-2 text-sm text-zinc-500">
+						Public repositories and recent project direction from
+						github.com/rikhza
+					</p>
+
+					<div
+						className="activity-grid mt-5"
+						aria-label="Decorative GitHub activity grid"
+					>
+						{Array.from({ length: 140 }).map((_, index) => (
+							<span
+								key={index}
+								className={`activity-cell level-${((index * 7 + index / 3) % 5) | 0}`}
+							/>
+						))}
+					</div>
+				</section>
+
+				<footer className="py-20 text-center text-xs text-zinc-600">
+					<p>Design & Developed by RIKHZA</p>
+					<p className="mt-1">© 2026. All rights reserved.</p>
+				</footer>
 			</div>
 		</main>
 	);

@@ -1,0 +1,14 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[functions]
+  node_bundler = "esbuild"
+  # This sets the AWS region for Netlify Edge/Serverless functions
+  # ap-southeast-1 is Singapore
+  region = "ap-southeast-1"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
