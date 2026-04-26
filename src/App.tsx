@@ -28,57 +28,49 @@ interface RepoProject {
 
 const repoProjects: RepoProject[] = [
 	{
-		name: "tangkapp-landing",
+		name: "tangkapp.id",
 		description:
-			"Astro landing repository for Tangkapp, focused on a clean product-facing web surface.",
-		stack: ["Astro", "TypeScript", "Landing"],
-		language: "Astro",
-		updated: "Apr 2026",
-		url: "https://github.com/rikhza/tangkapp-landing",
+			"Internal office workflow web app with MERN stack, integrated for government system processes.",
+		stack: ["MongoDB", "Express", "React", "Node.js", "MERN"],
+		language: "JavaScript",
+		updated: "2026",
+		url: "https://tangkapp.id",
+	},
+	{
+		name: "lokakota.id",
+		description:
+			"Web platform built with WordPress stack and native PHP OJS customization for publication workflows.",
+		stack: ["WordPress", "PHP", "OJS", "MySQL"],
+		language: "PHP",
+		updated: "2025",
+		url: "https://lokakota.id",
+	},
+	{
+		name: "CJDB.app",
+		description:
+			"Next.js application deployed with AWS Lambda, S3, and Cloudflare Workers for scalable delivery.",
+		stack: ["Next.js", "AWS Lambda", "S3", "Cloudflare Worker"],
+		language: "TypeScript",
+		updated: "2026",
+		url: "https://cjdb.app",
 	},
 	{
 		name: "setrimtam",
 		description:
-			"TypeScript project from the latest GitHub activity, shaped as a modern app/code experiment.",
-		stack: ["TypeScript", "App", "Web"],
+			"Vite-based tooling app with localStorage-first persistence, designed for mainframe support workflows.",
+		stack: ["Vite", "TypeScript", "LocalStorage", "Tooling"],
 		language: "TypeScript",
-		updated: "Apr 2026",
+		updated: "2026",
 		url: "https://github.com/rikhza/setrimtam",
 	},
 	{
-		name: "za-portfolio",
+		name: "UKM voting system",
 		description:
-			"Personal portfolio repository, built around fast UI, modern frontend tooling, and a sharper identity.",
-		stack: ["TypeScript", "React", "Vite"],
-		language: "TypeScript",
-		updated: "Mar 2026",
-		url: "https://github.com/rikhza/za-portfolio",
-	},
-	{
-		name: "personal-next-portfolio",
-		description:
-			"Next.js portfolio project and earlier personal site iteration.",
-		stack: ["Next.js", "TypeScript", "Portfolio"],
-		language: "TypeScript",
-		updated: "Oct 2025",
-		url: "https://github.com/rikhza/personal-next-portfolio",
-	},
-	{
-		name: "zaa",
-		description:
-			"JavaScript repo connected to the is-a.dev subdomain workflow.",
-		stack: ["JavaScript", "DNS", "Web"],
-		language: "JavaScript",
-		updated: "Oct 2025",
-		url: "https://github.com/rikhza/zaa",
-	},
-	{
-		name: "cookpedia.cigi.co.id",
-		description: "PHP app repository for Cookpedia under Cigi.",
-		stack: ["PHP", "MySQL", "App"],
-		language: "PHP",
-		updated: "Sep 2025",
-		url: "https://github.com/rikhza/cookpedia.cigi.co.id",
+			"Desktop election system for student organizations, implemented as a Java GUI application.",
+		stack: ["Java", "GUI", "Desktop App"],
+		language: "Java",
+		updated: "2024",
+		url: "https://github.com/rikhza",
 	},
 ];
 
@@ -399,11 +391,8 @@ export default function App() {
 					</div>
 
 					<h1 className="mt-7 text-4xl font-bold tracking-[-0.045em] text-white sm:text-5xl">
-						Hi, I&apos;m Rikhza
+						Hi, I&apos;m Rikhza (Riza)
 					</h1>
-					<p className="mt-2 text-3xl font-bold tracking-[-0.04em] text-zinc-500 sm:text-4xl">
-						A Dev.
-					</p>
 
 					<p className="mt-5 text-sm leading-7 text-zinc-400">
 						<BioToken tone="orange">System Architect</BioToken> and{" "}
