@@ -386,8 +386,7 @@ export default function App() {
 
 				<section id="home" className="pt-20">
 					<div className="avatar-mark">
-						<span>za</span>
-						<Sparkles className="absolute right-4 top-4 h-4 w-4" />
+						<span>zaa</span>
 					</div>
 
 					<h1 className="mt-7 text-4xl font-bold tracking-[-0.045em] text-white sm:text-5xl">
