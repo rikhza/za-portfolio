@@ -340,7 +340,7 @@ export default function App() {
 					}
 				});
 			},
-			{ rootMargin: "-40% 0px -60% 0px" }
+			{ rootMargin: "-40% 0px -60% 0px" },
 		);
 
 		const sections = document.querySelectorAll("section[id]");
@@ -354,10 +354,24 @@ export default function App() {
 			<div className="mx-auto min-h-screen w-full max-w-[650px] px-5 py-5 sm:px-6">
 				<header className="site-nav sticky top-3 z-40">
 					<nav className="nav-pill" aria-label="Primary navigation">
-						<a href="#home" data-active={activeSection === "home"}>Home</a>
-						<a href="#work" data-active={activeSection === "work"}>Work</a>
-						<a href="#projects" data-active={activeSection === "projects"}>Projects</a>
-						<a href="#about" data-active={activeSection === "about"}>About</a>
+						<a href="#home" data-active={activeSection === "home"}>
+							Home
+						</a>
+						<a href="#work" data-active={activeSection === "work"}>
+							Work
+						</a>
+						<a
+							href="#projects"
+							data-active={activeSection === "projects"}
+						>
+							Projects
+						</a>
+						<a
+							href="#about"
+							data-active={activeSection === "about"}
+						>
+							About
+						</a>
 					</nav>
 
 					<button
@@ -504,9 +518,6 @@ export default function App() {
 													{item.status}
 												</span>
 											</div>
-											<p className="text-sm text-zinc-400">
-												{item.role}
-											</p>
 										</div>
 									</div>
 									<p className="shrink-0 text-right text-xs leading-5 text-zinc-500">
