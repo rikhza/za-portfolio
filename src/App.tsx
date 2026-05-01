@@ -30,8 +30,8 @@ const repoProjects: RepoProject[] = [
 	{
 		name: "tangkapp.id",
 		description:
-			"Internal office workflow web app with MERN stack, integrated for government system processes.",
-		stack: ["MongoDB", "Express", "React", "Node.js", "MERN"],
+			"Internal office workflow web app with MERN stack, AWS, and government system process integrations.",
+		stack: ["MongoDB", "Express", "React", "Node.js", "AWS", "MERN"],
 		language: "JavaScript",
 		updated: "2026",
 		url: "https://tangkapp.id",
@@ -80,10 +80,10 @@ const workItems = [
 		status: "Current",
 		meta: "IT Specialist",
 		points: [
-			"Working inside financial-scale technical environments with an emphasis on reliability and operational clarity.",
-			"Combining system thinking, delivery discipline, and practical engineering across internal technical workflows.",
+			"Working with financial-scale mainframe systems across COBOL, CICS, IBM MQ, and scheduled operations.",
+			"Maintaining reliability across internal workflows with BMC Control-M, operational discipline, and clear system thinking.",
 		],
-		stack: ["Linux+", "AWS", "Systems", "Ops"],
+		stack: ["Mainframe", "COBOL", "CICS", "IBM MQ", "BMC Control-M"],
 	},
 	{
 		title: "BINUS University",
@@ -176,7 +176,59 @@ const techTone: Record<
 		slug: "mysql",
 		iconColor: "ffffff",
 	},
-	AWS: { text: "AWS", bg: "#ff9900", shadow: "#7a3f00" },
+	AWS: {
+		text: "AWS",
+		bg: "#ff9900",
+		shadow: "#7a3f00",
+	},
+	"Node.js": {
+		text: "NO",
+		bg: "#5fa04e",
+		shadow: "#254a1f",
+		slug: "nodedotjs",
+		iconColor: "ffffff",
+	},
+	Java: {
+		text: "JV",
+		bg: "#f89820",
+		shadow: "#7a3f00",
+		slug: "openjdk",
+		iconColor: "050505",
+	},
+	WordPress: {
+		text: "WP",
+		bg: "#21759b",
+		shadow: "#0b3447",
+		slug: "wordpress",
+		iconColor: "ffffff",
+	},
+	Mainframe: {
+		text: "MF",
+		bg: "#151515",
+		shadow: "#050505",
+	},
+	COBOL: {
+		text: "CBL",
+		bg: "#244f8f",
+		shadow: "#102747",
+	},
+	CICS: {
+		text: "CIC",
+		bg: "#0f766e",
+		shadow: "#063d39",
+	},
+	"IBM MQ": {
+		text: "MQ",
+		bg: "#0f62fe",
+		shadow: "#002d9c",
+		slug: "ibm",
+		iconColor: "ffffff",
+	},
+	"BMC Control-M": {
+		text: "CTM",
+		bg: "#dc2626",
+		shadow: "#7f1d1d",
+	},
 	"Linux+": {
 		text: "L+",
 		bg: "#f4f4f4",
@@ -394,24 +446,18 @@ export default function App() {
 					</h1>
 
 					<p className="mt-5 text-sm leading-7 text-zinc-400">
-						<BioToken tone="orange">System Architect</BioToken> and{" "}
-						<BioToken>Developer</BioToken> with a strong foundation
-						in Information Systems and a{" "}
+						<BioToken tone="orange">System Architect</BioToken>,{" "}
+						<BioToken>Developer</BioToken>, and BCA IT Specialist
+						with a{" "}
 						<BioToken tone="blue">
 							Master&apos;s in Computer Science
 						</BioToken>{" "}
-						from BINUS University. Certified in{" "}
-						<TechPill name="Linux+" /> and <TechPill name="AWS" />,
-						with hands-on experience in{" "}
+						from BINUS University. Certified in <TechPill name="Linux+" />{" "}
+						and <TechPill name="AWS" />, focused on{" "}
 						<BioToken>full-stack development</BioToken>,{" "}
-						<BioToken tone="green">devops</BioToken>, and{" "}
-						<BioToken tone="blue">cloud computing</BioToken>. Strong
-						skills in system architecture design,
-						<BioToken tone="green">automation</BioToken>, and
-						scalable application deployment. Proven track record
-						leading system architecture and development projects for
-						government and corporate, combining technical expertise
-						with project leadership to deliver{" "}
+						<BioToken tone="green">mainframe operations</BioToken>,
+						<BioToken tone="blue">cloud</BioToken>,{" "}
+						<BioToken tone="green">automation</BioToken>, and{" "}
 						<BioToken tone="orange">
 							scalable digital solutions
 						</BioToken>
@@ -608,7 +654,11 @@ export default function App() {
 
 					<div className="about-panel mt-5">
 						<div className="about-photo">
-							<span>RZ</span>
+							<img
+								src="/about-rikhza-workspace.webp"
+								alt="Abstract technology workspace illustration for Rikhza"
+								loading="lazy"
+							/>
 						</div>
 						<div>
 							<h3 className="text-xl font-semibold tracking-[-0.03em] text-white">
