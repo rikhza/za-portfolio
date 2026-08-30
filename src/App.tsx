@@ -442,18 +442,14 @@ export default function App() {
 					</div>
 
 					<h1 className="mt-7 text-4xl font-bold tracking-[-0.045em] text-white sm:text-5xl">
-						Hi, I&apos;m Rikhza (Riza)
+						Hi, I&apos;m Muhammad (Rikhza) Maulana
 					</h1>
 
 					<p className="mt-5 text-sm leading-7 text-zinc-400">
-						<BioToken tone="orange">System Architect</BioToken>,{" "}
-						<BioToken>Developer</BioToken>, and BCA IT Specialist
-						with a{" "}
-						<BioToken tone="blue">
-							Master&apos;s in Computer Science
-						</BioToken>{" "}
-						from BINUS University. Certified in <TechPill name="Linux+" />{" "}
-						and <TechPill name="AWS" />, focused on{" "}
+						<BioToken tone="orange">Solution Technical Architect</BioToken>,{" "}
+						<BioToken>Backend and AI Developer</BioToken>, and IT
+						Specialist at BCA. Certified in <TechPill name="Linux+" /> and{" "}
+						<TechPill name="AWS" />, focused on{" "}
 						<BioToken>full-stack development</BioToken>,{" "}
 						<BioToken tone="green">mainframe operations</BioToken>,
 						<BioToken tone="blue">cloud</BioToken>,{" "}
